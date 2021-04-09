@@ -30,11 +30,23 @@ class SleepTrackerViewModelFactory(
         private val dataSource: SleepDatabaseDao,
         private val application: Application) : ViewModelProvider.Factory {
     @Suppress("unchecked_cast")
-    override fun <T : ViewModel?> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(SleepTrackerViewModel::class.java)) {
+    override fun <T : ViewModel?> create(modelClass: Class<T>): T {//we override create which takes any class type as argument and returns a viewmodel
+        if (modelClass.isAssignableFrom(SleepTrackerViewModel::class.java)) { // here we check if a SleepTrackerViewModel is available or not and if present we return a viewmodel
+
             return SleepTrackerViewModel(dataSource, application) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
 
+/*
+it takes the same parameter as the sleeptrackerviewModel
+
+the above is mostly boiler plate code
+
+from the DAO our model knows how to access the data base
+
+instead of the viewmodel create dependencies to the database we use the viewmodelfactory it makes the view model easy to test
+
+
+ */

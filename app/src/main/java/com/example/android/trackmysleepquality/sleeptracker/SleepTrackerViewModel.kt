@@ -27,5 +27,16 @@ import com.example.android.trackmysleepquality.database.SleepDatabaseDao
 class SleepTrackerViewModel(
         val database: SleepDatabaseDao,
         application: Application) : AndroidViewModel(application) {
+
 }
 
+/*
+this class is same as view model
+it takes the application context as parameter as makes it available as a property
+a view model needs access to the data base
+which is to through the interface defined in the DAO
+ans then we pass it to the super class as well
+Next we need a factory to instantiate the view model and provide it with data source
+
+
+ */

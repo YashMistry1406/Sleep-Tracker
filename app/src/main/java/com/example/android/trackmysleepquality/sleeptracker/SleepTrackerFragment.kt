@@ -22,7 +22,9 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import com.example.android.trackmysleepquality.R
+import com.example.android.trackmysleepquality.database.SleepDatabase
 import com.example.android.trackmysleepquality.databinding.FragmentSleepTrackerBinding
 
 /**
@@ -44,6 +46,26 @@ class SleepTrackerFragment : Fragment() {
         val binding: FragmentSleepTrackerBinding = DataBindingUtil.inflate(
                 inflater, R.layout.fragment_sleep_tracker, container, false)
 
+        val application = requireNotNull(this.activity).application  //on create we need a reference to the application to which the fragment is attached to , to pass it to the viewmodelfactory
+
+        val dataSource = SleepDatabase.getInstance(application).sleepDatabaseDao // refernce to data source using the reference to DAO
+
+        val viewModelFactory = SleepTrackerViewModelFactory(dataSource, application)
+
+        val sleepTrackerViewModel =
+                ViewModelProvider(
+                        this, viewModelFactory).get(SleepTrackerViewModel::class.java)
+
+        binding.sleepTrackerViewModel = sleepTrackerViewModel
+
+        binding.lifecycleOwner = this //
+
         return binding.root
     }
 }
+/*
+
+on create we need a reference to the application to which the fragment is attached to , to pass it to the viewmodelfactory
+
+
+ */
