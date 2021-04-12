@@ -17,9 +17,18 @@
 package com.example.android.trackmysleepquality.sleeptracker
 
 import android.app.Application
+import android.provider.SyncStateContract.Helpers.insert
+import android.provider.SyncStateContract.Helpers.update
+
+
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Transformations
 import com.example.android.trackmysleepquality.database.SleepDatabaseDao
+import com.example.android.trackmysleepquality.database.SleepNight
+import com.example.android.trackmysleepquality.formatNights
+import kotlinx.coroutines.launch
 
 /**
  * ViewModel for SleepTrackerFragment.
@@ -27,6 +36,85 @@ import com.example.android.trackmysleepquality.database.SleepDatabaseDao
 class SleepTrackerViewModel(
         val database: SleepDatabaseDao,
         application: Application) : AndroidViewModel(application) {
+
+    private var tonight=MutableLiveData<SleepNight?>()
+    private val nights=database.getAllNights()
+
+    private fun initializeTonight() {
+        viewModelScope.launch {
+            tonight.value = getTonightFromDatabase()
+        }
+    }
+
+
+    val nightsString = Transformations.map(nights) { nights ->
+        formatNights(nights, application.resources)
+    }
+
+    init {
+        //TODO
+        initializeTonight()
+
+    }
+    private suspend fun getTonightFromDatabase(): SleepNight? {
+        var night = database.getTonight()
+        if (night?.endTimeMilli != night?.startTimeMilli) {
+            night = null
+        }
+        return night
+    }
+
+
+
+    private suspend fun clear(){
+        database.clear()
+    }
+
+
+    private suspend fun update(night: SleepNight){
+        database.update(night)
+    }
+
+    private suspend fun insert(night: SleepNight){
+        database.insert(night)
+    }
+
+
+
+
+
+    fun onStartTracking(){
+        viewModelScope.launch {
+
+            val newNight=SleepNight()
+            insert(newNight)
+            tonight.value=getTonightFromDatabase()
+
+
+        }
+    }
+    fun onStopTracking(){
+        viewModelScope.launch {
+            val oldNight = tonight.value ?: return@launch
+
+            // Update the night in the database to add the end time.
+            oldNight.endTimeMilli = System.currentTimeMillis()
+
+            update(oldNight)
+        }
+    }
+
+    fun onClear() {
+        viewModelScope.launch {
+            // Clear the database table.
+               clear()
+
+            // And clear tonight since it's no longer in the database
+            tonight.value = null
+        }
+    }
+
+
 
 }
 
@@ -37,6 +125,17 @@ a view model needs access to the data base
 which is to through the interface defined in the DAO
 ans then we pass it to the super class as well
 Next we need a factory to instantiate the view model and provide it with data source
+
+<<<<--------------------------------------------COROUTINES --------------------------------------------->>>>>
+            here we are going to use kotlin coroutines that are a way to handle background task
+            it is done to reduce the work on the main thread that is the UI thread
+            ans pass it to other threads
+            using kotlin coroutines we are able to do the task effectively without any delay to the ui
+
+            To manage all our corountines we need a job it is the task that the coroutines do and return to the work when done
+            We also define the scope, which determines on which thread the corountines will run on and it also needs to know about the job
+
+AT THE END WE HAVE ADDED DATA BINDING
 
 
  */
