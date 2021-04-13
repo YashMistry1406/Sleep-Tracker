@@ -19,15 +19,13 @@ package com.example.android.trackmysleepquality.sleeptracker
 import android.app.Application
 import android.provider.SyncStateContract.Helpers.insert
 import android.provider.SyncStateContract.Helpers.update
+import androidx.lifecycle.*
 
 
-import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Transformations
 import com.example.android.trackmysleepquality.database.SleepDatabaseDao
 import com.example.android.trackmysleepquality.database.SleepNight
 import com.example.android.trackmysleepquality.formatNights
+import com.example.android.trackmysleepquality.sleepquality.SleepQualityFragment
 import kotlinx.coroutines.launch
 
 /**
@@ -36,6 +34,35 @@ import kotlinx.coroutines.launch
 class SleepTrackerViewModel(
         val database: SleepDatabaseDao,
         application: Application) : AndroidViewModel(application) {
+
+
+
+
+
+    //adding snackbar
+    private var _showSnackbarEvent = MutableLiveData<Boolean>()
+
+    val showSnackBarEvent: LiveData<Boolean>
+        get() = _showSnackbarEvent
+
+    fun doneShowingSnackbar() {
+        _showSnackbarEvent.value = false
+    }
+
+
+
+    private val _navigateToSleepQuality = MutableLiveData<SleepNight>()
+
+    val navigateToSleepQuality: LiveData<SleepNight>
+        get() = _navigateToSleepQuality
+
+
+    fun doneNavigating() {
+        _navigateToSleepQuality.value = null
+    }
+
+
+
 
     private var tonight=MutableLiveData<SleepNight?>()
     private val nights=database.getAllNights()
@@ -52,7 +79,7 @@ class SleepTrackerViewModel(
     }
 
     init {
-        //TODO
+
         initializeTonight()
 
     }
@@ -101,6 +128,8 @@ class SleepTrackerViewModel(
             oldNight.endTimeMilli = System.currentTimeMillis()
 
             update(oldNight)
+
+            _navigateToSleepQuality.value = oldNight
         }
     }
 
@@ -111,9 +140,22 @@ class SleepTrackerViewModel(
 
             // And clear tonight since it's no longer in the database
             tonight.value = null
+
+            _showSnackbarEvent.value = true
         }
     }
 
+
+
+    val startButtonVisible = Transformations.map(tonight) {
+        null == it
+    }
+    val stopButtonVisible = Transformations.map(tonight) {
+        null != it
+    }
+    val clearButtonVisible = Transformations.map(nights) {
+        it?.isNotEmpty()
+    }
 
 
 }
